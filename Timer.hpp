@@ -168,8 +168,11 @@ public:
      */
     void stop()
     {
-        timer.addTime(st_clock::now() - epoch);
-        isrunning = false;
+        if (isrunning)
+        {
+            timer.addTime(st_clock::now() - epoch);
+            isrunning = false;
+        }
     }
 
 private:
