@@ -129,24 +129,7 @@ public:
      * @return func的返回值
      */
     template <typename Func, typename... Args>
-    auto measure(Func &&func, Args &&...args)
-    {
-        if constexpr (std::is_void_v<std::invoke_result_t<Func, Args...>>)
-        {
-            start();
-            std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
-            stop();
-            return;
-        }
-        else
-        {
-            start();
-            auto &&result = std::invoke(
-                std::forward<Func>(func), std::forward<Args>(args)...);
-            stop();
-            return std::forward<decltype(result)>(result);
-        }
-    }
+    auto measure(Func &&func, Args &&...args) &;
 
     friend class DeterTimer;
 
@@ -195,5 +178,22 @@ private:
     bool                              isrunning;
     std::chrono::time_point<st_clock> epoch;
 };
+
+template <typename Func, typename... Args>
+auto Timer::measure(Func &&func, Args &&...args) &
+{
+    auto guard = DeterTimer(*this);
+    if constexpr (std::is_void_v<std::invoke_result_t<Func, Args...>>)
+    {
+        std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+        return;
+    }
+    else
+    {
+        auto &&result = std::invoke(
+            std::forward<Func>(func), std::forward<Args>(args)...);
+        return std::forward<decltype(result)>(result);
+    }
+}
 
 #endif /* TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69 */
