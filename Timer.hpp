@@ -8,6 +8,7 @@
 #include <functional>
 #include <ostream>
 #include <ratio>
+#include <concepts>
 
 template <typename T>
 struct is_ratio: std::false_type
@@ -32,21 +33,13 @@ concept IsRatio = is_ratio_v<T>;
  */
 class Timer
 {
-    template <IsRatio TargetUnit = std::chrono::seconds::period>
     friend std::ostream &operator<<(std::ostream &os, Timer const &timer)
     {
-        return os << timer.elapsedTime<TargetUnit>();
+        return os << timer.elapsedTime<>();
     }
 
 public:
-#ifndef NDEBUG
-    Timer() :
-    elapsed(std::chrono::duration<double>::zero()), epoch(), isrunning(false)
-    {
-    }
-#else
-    Timer() : elapsed(std::chrono::duration<double>::zero()), epoch() {}
-#endif
+    Timer() : elapsed(), epoch(), isrunning(false) {}
 
     /**
      * @brief 重置计时器，清空累积时间并设置为未计时状态
@@ -54,11 +47,9 @@ public:
      */
     void reset()
     {
-        elapsed = {};
-        epoch   = {};
-#ifndef NDEBUG
+        elapsed   = {};
+        epoch     = {};
         isrunning = false;
-#endif
     }
 
     /**
@@ -67,11 +58,9 @@ public:
      */
     void start() noexcept
     {
-#ifndef NDEBUG
         assert(!isrunning && "Timer is already running.");
         isrunning = true;
-#endif
-        epoch = st_clock::now();
+        epoch     = st_clock::now();
     }
 
     /**
@@ -96,8 +85,8 @@ public:
     template <IsRatio TargetUnit = std::chrono::seconds::period>
     double elapsedTime() const
     {
-        return std::chrono::duration_cast<
-            std::chrono::duration<double, TargetUnit>>(elapsed)
+        return std::chrono::duration_cast<std::chrono::duration<double,
+            TargetUnit>>(elapsed)
             .count();
     }
 
@@ -110,12 +99,9 @@ public:
     double peek() const
     {
         auto nowElapsed = elapsed;
-#ifndef NDEBUG
-        if (isrunning)
-#endif
-            nowElapsed += st_clock::now() - epoch;
-        return std::chrono::duration_cast<
-            std::chrono::duration<double, TargetUnit>>(nowElapsed)
+        if (isrunning) nowElapsed += st_clock::now() - epoch;
+        return std::chrono::duration_cast<std::chrono::duration<double,
+            TargetUnit>>(nowElapsed)
             .count();
     }
 
@@ -135,13 +121,11 @@ public:
 
 private:
     using st_clock = std::chrono::steady_clock;
-    std::chrono::duration<double>     elapsed;
+    st_clock::duration                elapsed;
     std::chrono::time_point<st_clock> epoch;
-#ifndef NDEBUG
-    bool isrunning;
-#endif
+    bool                              isrunning;
 
-    void addTime(std::chrono::duration<double> time) { elapsed += time; }
+    void addTime(st_clock::duration time) { elapsed += time; }
 };
 
 /**
@@ -157,10 +141,13 @@ public:
     {
     }
 
-    ~DeterTimer()
-    {
-        if (isrunning) timer.addTime(st_clock::now() - epoch);
-    }
+    DeterTimer(DeterTimer const &)            = delete;
+    DeterTimer &operator=(DeterTimer const &) = delete;
+
+    DeterTimer(DeterTimer &&)            = delete;
+    DeterTimer &operator=(DeterTimer &&) = delete;
+
+    ~DeterTimer() noexcept { stop(); }
 
     /**
      * @brief 提前手动结束本次作用域计时，防止析构时重复累加
@@ -193,8 +180,8 @@ auto Timer::measure(Func &&func, Args &&...args) &
     }
     else
     {
-        auto &&result = std::invoke(
-            std::forward<Func>(func), std::forward<Args>(args)...);
+        auto &&result =
+            std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
         return std::forward<decltype(result)>(result);
     }
 }
