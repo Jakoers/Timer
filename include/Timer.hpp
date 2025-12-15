@@ -186,4 +186,15 @@ auto Timer::measure(Func &&func, Args &&...args) &
     }
 }
 
+template <typename... Tags>
+struct TimerRegister
+{
+    template <typename Tag>
+    static Timer &get()
+    {
+        static Timer t;
+        return t;
+    }
+};
+
 #endif /* TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69 */
