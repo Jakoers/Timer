@@ -1,3 +1,4 @@
 .vscode/
 build/
 *.code-workspace
+.disable_example_tests
