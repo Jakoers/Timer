@@ -1,12 +1,14 @@
+#pragma once
 #ifndef TIMERGROUP_F6CBBEF2_5EE8_4F68_87D1_D798594EFA96
-#define TIMERGROUP_F6CBBEF2_5EE8_4F68_87D1_D798594EFA96
+#    define TIMERGROUP_F6CBBEF2_5EE8_4F68_87D1_D798594EFA96
 
-#include "Timer_Concepts.hpp"
+#    include "timer_concepts.hpp"
+#    include "timer_registry.hpp"
 
-#include <chrono>
-#include <type_traits>
-#include <utility>
-#include <ostream>
+#    include <chrono>
+#    include <type_traits>
+#    include <utility>
+#    include <ostream>
 
 namespace
 {
@@ -22,13 +24,12 @@ void tuple_for_each(F &&f)
     tuple_for_each_impl<Tuple>(std::forward<F>(f),
         std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 }
-} // namespace
 
-template <typename Registry, typename Node, IsRatio TargetUnit>
+template <typename Registry, typename Node, Timer_Impl::IsRatio TargetUnit>
 // requires TimerRegistryLike<Registry, Node>
 double node_time()
 {
-    if constexpr (IsTimerLeaf<Node>)
+    if constexpr (Timer_Impl::IsTimerLeaf<Node>)
     {
         return Registry::template get<Node>()
             .template elapsedTime<TargetUnit>();
@@ -36,7 +37,7 @@ double node_time()
     else
     {
         double sum     = 0.0;
-        using Children = typename GroupTraits<Node>::Children;
+        using Children = typename Timer::GroupTraits<Node>::Children;
 
         tuple_for_each<Children>(
             [&](auto child)
@@ -48,7 +49,7 @@ double node_time()
     }
 }
 
-template <typename Registry, typename Node, IsRatio TargetUnit>
+template <typename Registry, typename Node, Timer_Impl::IsRatio TargetUnit>
 void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
 {
     double t     = node_time<Registry, Node, TargetUnit>();
@@ -57,9 +58,9 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
     os << std::string(indent, ' ') << typeid(Node).name() << ": " << t << " ("
        << ratio * 100 << "%)\n";
 
-    if constexpr (IsTimerGroup<Node>)
+    if constexpr (Timer_Impl::IsTimerGroup<Node>)
     {
-        using Children = typename GroupTraits<Node>::Children;
+        using Children = typename Timer::GroupTraits<Node>::Children;
         tuple_for_each<Children>(
             [&](auto child)
             {
@@ -69,13 +70,18 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
     }
 }
 
+} // namespace
+
+namespace Timer
+{
 template <typename Registry,
     typename Node,
-    IsRatio TargetUnit = std::chrono::seconds::period>
+    Timer_Impl::IsRatio TargetUnit = std::chrono::seconds::period>
 void print_node(std::ostream &os, int indent = 0)
 {
     return print_node_impl<Registry, Node, TargetUnit>(os,
         node_time<Registry, Node, TargetUnit>());
 }
+} // namespace Timer
 
 #endif /* TIMERGROUP_F6CBBEF2_5EE8_4F68_87D1_D798594EFA96 */

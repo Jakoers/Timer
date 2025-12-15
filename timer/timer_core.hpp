@@ -1,22 +1,25 @@
+#pragma once
 #ifndef TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69
-#define TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69
+#    define TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69
 
-#include "Timer_Concepts.hpp"
+#    include "timer_fwd.hpp"
+#    include "timer_concepts.hpp"
 
-#include <chrono>
-#include <cassert>
-#include <utility>
-#include <type_traits>
-#include <functional>
-#include <ostream>
-#include <concepts>
+#    include <chrono>
+#    include <cassert>
+#    include <utility>
+#    include <type_traits>
+#    include <functional>
+#    include <ostream>
+#    include <concepts>
 
+namespace Timer
+{ /**
+   * @brief 通用高精度计时器，支持 start/stop 累积计时、peek
+   * 查询当前时间、measure 执行函数计时等功能
+   *
+   */
 
-/**
- * @brief 通用高精度计时器，支持 start/stop 累积计时、peek 查询当前时间、measure
- * 执行函数计时等功能
- *
- */
 class Timer
 {
     friend std::ostream &operator<<(std::ostream &os, Timer const &timer)
@@ -55,12 +58,9 @@ public:
      */
     void stop() noexcept
     {
-#ifndef NDEBUG
         assert(isrunning && "Timer has not been started.");
-        isrunning = false;
-#endif
-        elapsed += st_clock::now() - epoch;
-        // epoch    = {};
+        isrunning  = false;
+        elapsed   += st_clock::now() - epoch;
     }
 
     /**
@@ -68,9 +68,10 @@ public:
      *
      * @tparam TargetUnit 单位比例，默认为 std::chrono::seconds::period
      */
-    template <IsRatio TargetUnit = std::chrono::seconds::period>
+    template <Timer_Impl::IsRatio TargetUnit = std::chrono::seconds::period>
     double elapsedTime() const
     {
+        assert(isrunning == false);
         return std::chrono::duration_cast<
             std::chrono::duration<double, TargetUnit>>(elapsed)
             .count();
@@ -81,7 +82,7 @@ public:
      *
      * @tparam TargetUnit 单位比例 默认为 std::chrono::seconds::period
      */
-    template <IsRatio TargetUnit = std::chrono::seconds::period>
+    template <Timer_Impl::IsRatio TargetUnit = std::chrono::seconds::period>
     double peek() const
     {
         auto nowElapsed = elapsed;
@@ -103,7 +104,7 @@ public:
     template <typename Func, typename... Args>
     auto measure(Func &&func, Args &&...args) &;
 
-    friend class DeterTimer;
+    friend class ScopedTimer;
 
 private:
     using st_clock = std::chrono::steady_clock;
@@ -119,21 +120,21 @@ private:
  * Timer的辅助类，用于作用域内的计时（进入构造函数开始计时，析构自动加入计时器）
  *
  */
-class DeterTimer
+class ScopedTimer
 {
 public:
-    [[nodiscard]] explicit DeterTimer(Timer &timer) :
+    [[nodiscard]] explicit ScopedTimer(Timer &timer) :
     timer(timer), isrunning(true), epoch(st_clock::now())
     {
     }
 
-    DeterTimer(DeterTimer const &)            = delete;
-    DeterTimer &operator=(DeterTimer const &) = delete;
+    ScopedTimer(ScopedTimer const &)            = delete;
+    ScopedTimer &operator=(ScopedTimer const &) = delete;
 
-    DeterTimer(DeterTimer &&)            = delete;
-    DeterTimer &operator=(DeterTimer &&) = delete;
+    ScopedTimer(ScopedTimer &&)            = delete;
+    ScopedTimer &operator=(ScopedTimer &&) = delete;
 
-    ~DeterTimer() noexcept { stop(); }
+    ~ScopedTimer() noexcept { stop(); }
 
     /**
      * @brief 提前手动结束本次作用域计时，防止析构时重复累加
@@ -158,7 +159,7 @@ private:
 template <typename Func, typename... Args>
 auto Timer::measure(Func &&func, Args &&...args) &
 {
-    auto guard = DeterTimer(*this);
+    auto guard = ScopedTimer(*this);
     if constexpr (std::is_void_v<std::invoke_result_t<Func, Args...>>)
     {
         std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
@@ -172,20 +173,21 @@ auto Timer::measure(Func &&func, Args &&...args) &
     }
 }
 
-template <typename... Tags>
-class TimerRegistry
+template <typename Func, typename... Args>
+auto measure(Timer &t, Func &&func, Args &&...args)
 {
-public:
-    template <typename Tag>
-    static Timer &get()
+    auto guard = ScopedTimer(t);
+    if constexpr (std::is_void_v<std::invoke_result_t<Func, Args...>>)
     {
-        static Timer t;
-        return t;
+        std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+        return;
     }
-
-private:
-    template <typename Tag>
-    inline static Timer timers;
-};
-
+    else
+    {
+        auto &&result =
+            std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+        return std::forward<decltype(result)>(result);
+    }
+}
+} // namespace Timer
 #endif /* TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69 */
