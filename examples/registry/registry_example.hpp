@@ -2,7 +2,7 @@
 #ifndef REGISTRY_EXAMPLE_C4C4838E_294B_4CC3_87D4_5C75AD1E03C5
 #    define REGISTRY_EXAMPLE_C4C4838E_294B_4CC3_87D4_5C75AD1E03C5
 
-#    include "timer.hpp"
+#    include "timer/timer.hpp"
 
 // 在头文件中注册若干个Timer
 using myTimers =

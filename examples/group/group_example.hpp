@@ -1,7 +1,7 @@
 #ifndef CROSSTU_EXAMPLE_ABB3EBE1_044D_477A_9E07_E4C32C0965C9
 #define CROSSTU_EXAMPLE_ABB3EBE1_044D_477A_9E07_E4C32C0965C9
 
-#include "timer.hpp"
+#include "timer/timer.hpp"
 
 struct Timer11: Timer::TimerNode
 {
