@@ -3,7 +3,7 @@
 #include <iostream>
 #include <thread>
 
-using TimerManager = TimerRegister<struct Timer_Measure, struct Timer_direct,
+using TimerManager = TimerRegistry<struct Timer_Measure, struct Timer_direct,
     struct Timer_Deter>;
 
 void f()

@@ -1,30 +1,16 @@
 #ifndef TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69
 #define TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69
 
+#include "Timer_Concepts.hpp"
+
 #include <chrono>
 #include <cassert>
 #include <utility>
 #include <type_traits>
 #include <functional>
 #include <ostream>
-#include <ratio>
 #include <concepts>
 
-template <typename T>
-struct is_ratio: std::false_type
-{
-};
-
-template <int64_t... Ns>
-struct is_ratio<std::ratio<Ns...>>: std::true_type
-{
-};
-
-template <typename T>
-constexpr bool is_ratio_v = is_ratio<T>::value;
-
-template <typename T>
-concept IsRatio = is_ratio_v<T>;
 
 /**
  * @brief 通用高精度计时器，支持 start/stop 累积计时、peek 查询当前时间、measure
@@ -85,8 +71,8 @@ public:
     template <IsRatio TargetUnit = std::chrono::seconds::period>
     double elapsedTime() const
     {
-        return std::chrono::duration_cast<std::chrono::duration<double,
-            TargetUnit>>(elapsed)
+        return std::chrono::duration_cast<
+            std::chrono::duration<double, TargetUnit>>(elapsed)
             .count();
     }
 
@@ -100,8 +86,8 @@ public:
     {
         auto nowElapsed = elapsed;
         if (isrunning) nowElapsed += st_clock::now() - epoch;
-        return std::chrono::duration_cast<std::chrono::duration<double,
-            TargetUnit>>(nowElapsed)
+        return std::chrono::duration_cast<
+            std::chrono::duration<double, TargetUnit>>(nowElapsed)
             .count();
     }
 
@@ -187,14 +173,19 @@ auto Timer::measure(Func &&func, Args &&...args) &
 }
 
 template <typename... Tags>
-struct TimerRegister
+class TimerRegistry
 {
+public:
     template <typename Tag>
     static Timer &get()
     {
         static Timer t;
         return t;
     }
+
+private:
+    template <typename Tag>
+    inline static Timer timers;
 };
 
 #endif /* TIMER_ACF53343_4EFA_45E1_9E22_6603F5CCAE69 */

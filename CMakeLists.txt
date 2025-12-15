@@ -12,3 +12,6 @@ target_include_directories(Timer PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_executable(timerExample ${PROJECT_SOURCE_DIR}/examples/example.cpp)
 target_link_libraries(timerExample Timer)
+
+add_executable(timerGroupExample ${PROJECT_SOURCE_DIR}/examples/timerGroup_example_main.cpp ${PROJECT_SOURCE_DIR}/examples/timerGroup_example_func.cpp)
+target_link_libraries(timerGroupExample Timer)
