@@ -14,12 +14,12 @@
 #    include <concepts>
 
 namespace Timer
-{ /**
-   * @brief 通用高精度计时器，支持 start/stop 累积计时、peek
-   * 查询当前时间、measure 执行函数计时等功能
-   *
-   */
-
+{
+/**
+ * @brief 通用高精度计时器，支持 start/stop 累积计时、peek
+ * 查询当前时间、measure 执行函数计时等功能
+ *
+ */
 class Timer
 {
     friend std::ostream &operator<<(std::ostream &os, Timer const &timer)
