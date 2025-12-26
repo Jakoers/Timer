@@ -14,7 +14,7 @@ template <typename Group>
 struct GroupTraits;
 }
 
-namespace Timer_Impl
+namespace Timer::Impl
 {
 template <typename T>
 struct is_ratio: std::false_type
@@ -34,14 +34,14 @@ concept IsRatio = is_ratio_v<T>;
 
 template <typename R, typename T>
 concept TimerRegistryLike = requires {
-    { R::template get<T>() } -> std::same_as<Timer::Timer &>;
+    { R::template get<T>() } -> std::same_as<::Timer::Timer &>;
 };
 
 template <typename T>
-concept IsTimerLeaf = std::is_base_of_v<Timer::TimerNode, T>;
+concept IsTimerLeaf = std::is_base_of_v<::Timer::TimerNode, T>;
 
 template <typename T>
-concept IsTimerGroup = std::is_base_of_v<Timer::GroupNode, T>;
+concept IsTimerGroup = std::is_base_of_v<::Timer::GroupNode, T>;
 } // namespace Timer_Impl
 
 #endif /* TIMER_CONCEPTS_A03540BD_3FE4_4B26_BB76_862C1EC3950A */

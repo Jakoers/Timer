@@ -68,7 +68,7 @@ public:
      *
      * @tparam TargetUnit 单位比例，默认为 std::chrono::seconds::period
      */
-    template <Timer_Impl::IsRatio TargetUnit = std::chrono::seconds::period>
+    template <::Timer::Impl::IsRatio TargetUnit = std::chrono::seconds::period>
     double elapsedTime() const
     {
         assert(isrunning == false);
@@ -82,7 +82,7 @@ public:
      *
      * @tparam TargetUnit 单位比例 默认为 std::chrono::seconds::period
      */
-    template <Timer_Impl::IsRatio TargetUnit = std::chrono::seconds::period>
+    template <::Timer::Impl::IsRatio TargetUnit = std::chrono::seconds::period>
     double peek() const
     {
         auto nowElapsed = elapsed;
