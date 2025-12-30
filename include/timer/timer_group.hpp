@@ -74,13 +74,12 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
 
 namespace Timer
 {
-template <typename Registry,
-    typename Node,
+template <typename Registry, typename Node,
     ::Timer::Impl::IsRatio TargetUnit = std::chrono::seconds::period>
 void print_node(std::ostream &os, int indent = 0)
 {
     return ::Timer::Impl::print_node_impl<Registry, Node, TargetUnit>(os,
-        ::Timer::Impl::node_time<Registry, Node, TargetUnit>());
+        ::Timer::Impl::node_time<Registry, Node, TargetUnit>(), indent);
 }
 } // namespace Timer
 
