@@ -36,12 +36,12 @@ double node_time()
     }
     else
     {
-        using Master = ::Timer::Impl::group_master_t<Node>;
+        using Master   = ::Timer::Impl::group_master_t<Node>;
         using Children = typename ::Timer::GroupTraits<Node>::Children;
 
         if constexpr (std::is_void_v<Master>)
         {
-            double sum     = 0.0;
+            double sum = 0.0;
 
             tuple_for_each<Children>(
                 [&](auto child)
@@ -65,8 +65,8 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
     double t     = node_time<Registry, Node, TargetUnit>();
     double ratio = parent_time > 0 ? t / parent_time : 0;
 
-    os << std::string(indent, ' ') << typeid(Node).name() << ": " << t << " ("
-       << ratio * 100 << "%)\n";
+    os << std::string(indent, ' ') << ::Timer::NodeName<Node>::name << ": " << t
+       << " (" << ratio * 100 << "%)\n";
 
     if constexpr (IsTimerGroup<Node>)
     {

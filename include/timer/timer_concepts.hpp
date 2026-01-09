@@ -8,12 +8,21 @@
 #    include <type_traits>
 #    include <concepts>
 
+#    include <string_view>
+
 namespace Timer
 {
 template <typename Group>
 struct GroupTraits
 {
 };
+
+template <typename Node>
+struct NodeName
+{
+    static constexpr std::string_view name = "<unnamed>";
+};
+
 } // namespace Timer
 
 namespace Timer::Impl
