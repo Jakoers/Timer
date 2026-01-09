@@ -11,7 +11,11 @@
 namespace Timer
 {
 template <typename Group>
-struct GroupTraits;
+struct GroupTraits
+{
+    using Children = std::tuple<>;
+    using Master = void;
+};
 }
 
 namespace Timer::Impl
@@ -42,6 +46,6 @@ concept IsTimerLeaf = std::is_base_of_v<::Timer::TimerNode, T>;
 
 template <typename T>
 concept IsTimerGroup = std::is_base_of_v<::Timer::GroupNode, T>;
-} // namespace Timer_Impl
+} // namespace Timer::Impl
 
 #endif /* TIMER_CONCEPTS_A03540BD_3FE4_4B26_BB76_862C1EC3950A */

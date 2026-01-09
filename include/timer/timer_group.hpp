@@ -36,16 +36,27 @@ double node_time()
     }
     else
     {
-        double sum     = 0.0;
-        using Children = typename ::Timer::GroupTraits<Node>::Children;
+        using Traits = ::Timer::GroupTraits<Node>;
 
-        tuple_for_each<Children>(
-            [&](auto child)
-            {
-                using Child  = typename decltype(child)::type;
-                sum         += node_time<Registry, Child, TargetUnit>();
-            });
-        return sum;
+        if constexpr (std::is_void_v<typename Traits::Master>)
+        {
+            double sum     = 0.0;
+            using Children = typename Traits::Children;
+
+            tuple_for_each<Children>(
+                [&](auto child)
+                {
+                    using Child  = typename decltype(child)::type;
+                    sum         += node_time<Registry, Child, TargetUnit>();
+                });
+            return sum;
+        }
+        else
+        {
+            using Master = Traits::Master;
+            return Registry::template get<Master>()
+                .template elapsedTime<TargetUnit>();
+        }
     }
 }
 
@@ -60,13 +71,29 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
 
     if constexpr (IsTimerGroup<Node>)
     {
-        using Children = typename ::Timer::GroupTraits<Node>::Children;
+        using Traits   = typename ::Timer::GroupTraits<Node>;
+        using Children = typename Traits::Children;
+
+        double children_sum = 0.0;
+
         tuple_for_each<Children>(
             [&](auto child)
             {
-                using Child = typename decltype(child)::type;
+                using Child   = typename decltype(child)::type;
+                children_sum += node_time<Registry, Child, TargetUnit>();
                 print_node_impl<Registry, Child, TargetUnit>(os, t, indent + 2);
             });
+
+        if constexpr (!std::is_void_v<typename Traits::Master>)
+        {
+            double others = t - children_sum;
+            if (others > 0)
+            {
+                ratio = t > 0 ? others / t : 0;
+                os << std::string(indent + 2, ' ') << "Others: " << others
+                   << " (" << ratio * 100 << "%)\n";
+            }
+        }
     }
 }
 
