@@ -36,12 +36,12 @@ double node_time()
     }
     else
     {
-        using Traits = ::Timer::GroupTraits<Node>;
+        using Master = ::Timer::Impl::group_master_t<Node>;
+        using Children = typename ::Timer::GroupTraits<Node>::Children;
 
-        if constexpr (std::is_void_v<typename Traits::Master>)
+        if constexpr (std::is_void_v<Master>)
         {
             double sum     = 0.0;
-            using Children = typename Traits::Children;
 
             tuple_for_each<Children>(
                 [&](auto child)
@@ -53,7 +53,6 @@ double node_time()
         }
         else
         {
-            using Master = Traits::Master;
             return Registry::template get<Master>()
                 .template elapsedTime<TargetUnit>();
         }
@@ -71,8 +70,8 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
 
     if constexpr (IsTimerGroup<Node>)
     {
-        using Traits   = typename ::Timer::GroupTraits<Node>;
-        using Children = typename Traits::Children;
+        using Master   = ::Timer::Impl::group_master_t<Node>;
+        using Children = typename ::Timer::GroupTraits<Node>::Children;
 
         double children_sum = 0.0;
 
@@ -84,7 +83,7 @@ void print_node_impl(std::ostream &os, double parent_time, int indent = 0)
                 print_node_impl<Registry, Child, TargetUnit>(os, t, indent + 2);
             });
 
-        if constexpr (!std::is_void_v<typename Traits::Master>)
+        if constexpr (!std::is_void_v<Master>)
         {
             double others = t - children_sum;
             if (others > 0)
